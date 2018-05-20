@@ -380,6 +380,7 @@ class Generator(object):
         return render_to_string(
             self.backend, "views.py", {
                 "classes": self._classes,
+                'basePath': self.parser.specification['basePath'],
                 "module": self.module_name,
                 "specification": json.dumps(self.parser.specification, indent=4,
                                             sort_keys=True).replace("\\", "\\\\")

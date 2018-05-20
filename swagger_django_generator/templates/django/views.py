@@ -6,10 +6,11 @@ import importlib
 import logging
 import json
 import jsonschema
+import os
 from jsonschema import ValidationError
 
 from django.conf import settings
-from django.http import JsonResponse, HttpResponseBadRequest
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views import View
@@ -48,6 +49,10 @@ def maybe_validate_result(result_string, schema):
         except ValidationError as e:
             LOGGER.error(e.message)
 
+
+def ui_index(request):
+    """index override view for /api/ui/"""
+    return HttpResponse(open(os.path.join(os.path.dirname(__file__),'ui_index.html')).read())
 
 {% for class_name, verbs in classes|dictsort(true) %}
 @method_decorator(csrf_exempt, name="dispatch")
@@ -179,7 +184,7 @@ class __SWAGGER_SPEC__(View):
     def get(self, request, *args, **kwargs):
         spec = json.loads("""{{ specification }}""")
         # Mod spec to point to demo application
-        spec["basePath"] = "/"
+        spec["basePath"] = "{{basePath}}"
         spec["host"] = "localhost:8000"
         # Add basic auth as a security definition
         security_definitions = spec.get("securityDefinitions", {})

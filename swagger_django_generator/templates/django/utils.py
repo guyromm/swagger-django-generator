@@ -11,7 +11,8 @@ import jsonschema
 import os
 import sys
 
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login
+from django.contrib.auth.models import User
 from django.core.exceptions import SuspiciousOperation
 from django.http import HttpResponse
 from django.conf import settings
@@ -66,7 +67,11 @@ def login_required_no_redirect(view_func):
 
         if "HTTP_X_API_KEY" in request.META:
             key = request.META["HTTP_X_API_KEY"]
+            # shared keys for development, must be defined in settings.py
             if key in settings.ALLOWED_API_KEYS:
+                user = User.objects.get(username=settings.ALLOWED_API_KEYS[key])
+                login(request,user)
+                request.user = user
                 return view_func(request, *args, **kwargs)
 
         return HttpResponse("Unauthorized", status=401)
