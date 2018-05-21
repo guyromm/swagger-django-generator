@@ -185,7 +185,10 @@ class __SWAGGER_SPEC__(View):
         spec = json.loads("""{{ specification }}""")
         # Mod spec to point to demo application
         spec["basePath"] = "{{basePath}}"
-        spec["host"] = "localhost:8000"
+        if hasattr(settings,'SWAGGER_HOST_OVERRIDE'):
+            spec['host'] = request.get_host()
+        else:
+            spec["host"] = "{{host}}"
         # Add basic auth as a security definition
         security_definitions = spec.get("securityDefinitions", {})
         security_definitions["basic_auth"] = {"type": "basic"}
