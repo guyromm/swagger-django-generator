@@ -7,3 +7,4 @@ django
 aiohttp
 aiohttp-cors
 pip<10.0
+rstr
