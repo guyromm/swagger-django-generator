@@ -25,9 +25,9 @@ try:
     VALIDATE_RESPONSES = settings.SWAGGER_API_VALIDATE_RESPONSES
 except AttributeError:
     VALIDATE_RESPONSES = False
-LOGGER.info("Swagger API response validation is {}".format(
-    "on" if VALIDATE_RESPONSES else "off"
-))
+    LOGGER.info("Swagger API response validation is {}".format(
+        "on" if VALIDATE_RESPONSES else "off"
+    ))
 
 # Set up the stub class. If it is not explicitly configured in the settings.py
 # file of the project, we default to a mocked class.
