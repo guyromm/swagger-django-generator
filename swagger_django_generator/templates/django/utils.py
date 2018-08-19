@@ -56,9 +56,8 @@ def login_required_no_redirect(view_func):
                 if auth[0].lower() == "basic":
                     base_val = base64.b64decode(auth[1])
                     if sys.version_info[0] > 2:
-                        uname, passwd = base_val.split(b":")
-                    else:
-                        uname, passwd = base_val.split(":")
+                        base_val = base_val.decode()
+                    uname, passwd = base_val.split(":")
                     user = authenticate(username=uname, password=passwd)
                     if user and user.is_active:
                         login(request, user)
