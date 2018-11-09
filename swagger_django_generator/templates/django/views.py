@@ -161,11 +161,7 @@ class {{ class_name }}(View):
         else:
             headers = {}
 
-        # The result may contain fields with date or datetime values that will not
-        # pass JSON validation. We first create the response, and then maybe validate
-        # the response content against the schema.
         response = JsonResponse(result, safe=False)
-
         maybe_validate_result(response.content, self.{{ verb|upper }}_RESPONSE_SCHEMA)
 
         for key, val in headers.items():
@@ -185,7 +181,7 @@ class __SWAGGER_SPEC__(View):
         spec = json.loads("""{{ specification }}""")
         # Mod spec to point to demo application
         spec["basePath"] = "{{basePath}}"
-        if hasattr(settings,'SWAGGER_HOST_OVERRIDE'):
+        if hasattr(settings, 'SWAGGER_HOST_OVERRIDE'):
             spec['host'] = request.get_host()
         else:
             spec["host"] = "{{host}}"
