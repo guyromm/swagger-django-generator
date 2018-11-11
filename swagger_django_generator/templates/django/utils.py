@@ -161,6 +161,7 @@ def login_required_no_redirect(view_func):
             key = request.META["HTTP_X_API_KEY"]
             # shared keys for development, must be defined in settings.py
             if key in settings.ALLOWED_API_KEYS:
+                User = get_user_model()
                 user = User.objects.get(username=settings.ALLOWED_API_KEYS[key])
                 login(request,user)
                 request.user = user

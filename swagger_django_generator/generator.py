@@ -104,7 +104,7 @@ def parse_array(schema):
     # type: (Dict) -> string
     return '{name} = {name}.split("{separator}")'.format(
         name=schema["name"],
-        separator=SEPARATORS[schema.get("collectionFormat", ",")]
+        separator=SEPARATORS[schema.get("collectionFormat", "csv")]
     )
 
 

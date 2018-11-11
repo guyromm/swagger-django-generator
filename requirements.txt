@@ -11,6 +11,7 @@ aiohttp
 aiohttp-cors
 pip<10.0
 rstr
+jwt
 
 # The following requirements are required by jsonschema
 # in order to do proper validation of certain formats.
