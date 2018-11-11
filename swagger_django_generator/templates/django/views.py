@@ -5,7 +5,6 @@ Do not modify this file. It is generated from the Swagger specification.
 import importlib
 import logging
 import json
-import jsonschema
 import os
 from jsonschema import ValidationError
 
