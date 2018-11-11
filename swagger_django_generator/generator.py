@@ -1,11 +1,15 @@
 import copy
 
-import click
-import jinja2
 import json
 import os
 import sys
+import parser
+
+import click
+import jinja2
+
 from swagger_parser import SwaggerParser
+
 
 DEFAULT_OUTPUT_DIR = "./generated"
 DEFAULT_MODULE = "generated"
@@ -236,6 +240,7 @@ class Generator(object):
         }
 
         self._make_class_definitions()
+        self._make_security_definitions()
 
     def resolve_schema_references(self, definition):
         # type: (Generator, Dict) -> None
@@ -256,6 +261,22 @@ class Generator(object):
         for value in definition.values():
             if isinstance(value, dict):
                 self.resolve_schema_references(value)
+
+    def _make_security_definitions(self):
+        """Process available security definition types:
+        * basic
+        * apiKey + JWT/Bearer option as a definition
+        - for now there's no support for OAuth2
+        - for now only 'in: header' is implemented
+        """
+        self.security_defs = {}
+        sec_defs = self.parser.specification.get("securityDefinitions", {})
+        for sec_desc, sec_type in sec_defs.items():
+            if sec_type['type'] in ['basic', 'apiKey']:
+                if sec_type.get('in') == 'header':
+                    sec_def = {'desc': sec_desc}
+                    sec_def.update(sec_type)
+                    self.security_defs[sec_type['type']] = sec_def
 
     def _make_class_definitions(self):
         self._classes = {}
@@ -418,7 +439,7 @@ class Generator(object):
                 'basePath': self.parser.specification['basePath'],
                 "module": self.module_name,
                 "specification": json.dumps(self.parser.specification, indent=4,
-                                            sort_keys=True).replace("\\", "\\\\")
+                                            sort_keys=True).replace("\\", "\\\\"),
             })
 
     def generate_stubs(self):
@@ -439,7 +460,13 @@ class Generator(object):
         Generate a `utils.py` file from the given specification.
         :return: str
         """
-        return render_to_string(self.backend, "utils.py", {})
+        return render_to_string(
+            self.backend,
+            "utils.py",
+            {
+                "security_defs": self.security_defs
+            },
+        )
 
 @click.command()
 @click.argument("specification_path", type=click.Path(dir_okay=False, exists=True))
