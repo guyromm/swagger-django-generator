@@ -1,11 +1,15 @@
 import copy
 
-import click
-import jinja2
 import json
 import os
 import sys
+import parser
+
+import click
+import jinja2
+
 from swagger_parser import SwaggerParser
+
 
 DEFAULT_OUTPUT_DIR = "./generated"
 DEFAULT_MODULE = "generated"
@@ -73,6 +77,36 @@ if major > 3 or major == 3 and minor >= 5:
 # * Paths map to class based views.
 # * (path, http_verb) combinations map to operations.
 
+# Swagger fields used in parameter definition, but which are unknown to jsonschema.
+_SWAGGER_FIELDS = frozenset(["name", "in", "required", "collectionFormat", "description"])
+
+
+def clean_schema(schema):
+    # type: (Dict) -> Dict
+    """Transform a Swagger parameter definition to a valid JSONSchema
+
+    Remove known Swagger fields as well as any custom definitions
+    (starting with "x-").
+    """
+    return {k: v for k, v in schema.items()
+            if k not in _SWAGGER_FIELDS and not k.lower().startswith("x-")}
+
+
+SEPARATORS = {
+    "pipes": "|",
+    "tsv": "\t",
+    "ssv": " ",
+    "csv": ","
+}
+
+
+def parse_array(schema):
+    # type: (Dict) -> string
+    return '{name} = {name}.split("{separator}")'.format(
+        name=schema["name"],
+        separator=SEPARATORS[schema.get("collectionFormat", "csv")]
+    )
+
 
 def render_to_string(backend, filename, context):
     # type: (str, str, Dict) -> str
@@ -91,11 +125,15 @@ def render_to_string(backend, filename, context):
     except ImportError:
         pass
 
-    return jinja2.Environment(
+    environment = jinja2.Environment(
         loader=jinja2.ChoiceLoader(loaders),
         trim_blocks=True,
-        lstrip_blocks=True
-    ).get_template(filename).render(context)
+        lstrip_blocks=True,
+    )
+    environment.filters["clean_schema"] = clean_schema
+    environment.filters["parse_array"] = parse_array
+
+    return environment.get_template(filename).render(context)
 
 
 def path_to_class_name(path):
@@ -202,6 +240,7 @@ class Generator(object):
         }
 
         self._make_class_definitions()
+        self._make_security_definitions()
 
     def resolve_schema_references(self, definition):
         # type: (Generator, Dict) -> None
@@ -222,6 +261,22 @@ class Generator(object):
         for value in definition.values():
             if isinstance(value, dict):
                 self.resolve_schema_references(value)
+
+    def _make_security_definitions(self):
+        """Process available security definition types:
+        * basic
+        * apiKey + JWT/Bearer option as a definition
+        - for now there's no support for OAuth2
+        - for now only 'in: header' is implemented
+        """
+        self.security_defs = {}
+        sec_defs = self.parser.specification.get("securityDefinitions", {})
+        for sec_desc, sec_type in sec_defs.items():
+            if sec_type['type'] in ['basic', 'apiKey']:
+                if sec_type.get('in') == 'header':
+                    sec_def = {'desc': sec_desc}
+                    sec_def.update(sec_type)
+                    self.security_defs[sec_type['type']] = sec_def
 
     def _make_class_definitions(self):
         self._classes = {}
@@ -380,11 +435,11 @@ class Generator(object):
         return render_to_string(
             self.backend, "views.py", {
                 "classes": self._classes,
-                'host':self.parser.specification['host'],
-                'basePath': self.parser.specification['basePath'],
+                'host': self.parser.specification.get('host'),
+                'basePath': self.parser.specification.get('basePath'),
                 "module": self.module_name,
                 "specification": json.dumps(self.parser.specification, indent=4,
-                                            sort_keys=True).replace("\\", "\\\\")
+                                            sort_keys=True).replace("\\", "\\\\"),
             })
 
     def generate_stubs(self):
@@ -405,7 +460,13 @@ class Generator(object):
         Generate a `utils.py` file from the given specification.
         :return: str
         """
-        return render_to_string(self.backend, "utils.py", {})
+        return render_to_string(
+            self.backend,
+            "utils.py",
+            {
+                "security_defs": self.security_defs
+            },
+        )
 
 @click.command()
 @click.argument("specification_path", type=click.Path(dir_okay=False, exists=True))
@@ -472,6 +533,10 @@ def main(specification_path, spec_format, backend, verbose, output_dir, module_n
             if verbose:
                 print(data)
 
+        click.secho("To perform validation for uri, date-time and color formats, install the "
+                    "packages indicated in the link below in YOUR project:")
+        click.secho("http://python-jsonschema.readthedocs.io/en/stable/validate/#jsonschema.FormatChecker")
+        click.secho("This tool adds validation for the UUID format in {}.".format(utils_file))
         click.secho("Done.", fg="green")
     except Exception as e:
         click.secho(str(e), fg="red")
