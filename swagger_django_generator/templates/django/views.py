@@ -6,13 +6,14 @@ import importlib
 import logging
 import json
 import os
-from jsonschema import ValidationError
 
+from jsonschema import ValidationError
 from django.conf import settings
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views import View
+from django.core.exceptions import ObjectDoesNotExist
 
 import {{ module }}.schemas as schemas
 import {{ module }}.utils as utils
@@ -74,6 +75,7 @@ def maybe_validate_result(result_string, schema):
 def ui_index(request):
     """index override view for /api/ui/"""
     return HttpResponse(open(os.path.join(os.path.dirname(__file__),'ui_index.html')).read())
+
 
 {% for class_name, verbs in classes|dictsort(true) %}
 @method_decorator(csrf_exempt, name="dispatch")
@@ -207,6 +209,8 @@ class {{ class_name }}(View):
 
         except ValidationError as ve:
             return HttpResponseBadRequest("Parameter validation failed: {}".format(ve.message))
+        except ObjectDoesNotExist as ve:
+            return HttpResponseNotFound("Object not found: {}".format(ve))
         except ValueError as ve:
             return HttpResponseBadRequest("Parameter validation failed: {}".format(ve))
     {% if not loop.last %}
