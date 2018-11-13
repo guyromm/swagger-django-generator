@@ -9,7 +9,8 @@ import os
 
 from jsonschema import ValidationError
 from django.conf import settings
-from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound
+from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound, \
+    FileResponse
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views import View
@@ -200,7 +201,8 @@ class {{ class_name }}(View):
                 response_method = JsonResponse
             response = response_method(result, safe=False)
 
-            maybe_validate_result(response.content, self.{{ verb|upper }}_RESPONSE_SCHEMA)
+            if not isinstance(response, FileResponse):
+                maybe_validate_result(response.content, self.{{ verb|upper }}_RESPONSE_SCHEMA)
 
             for key, val in headers.items():
                 response[key] = val
