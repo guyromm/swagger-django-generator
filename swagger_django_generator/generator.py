@@ -2,6 +2,7 @@ import copy
 
 import json
 import os
+import re
 import sys
 import parser
 
@@ -108,6 +109,13 @@ def parse_array(schema):
     )
 
 
+def capitalize_splitter(value):
+    parts = re.findall('[A-Z][^A-Z]*', value)
+    parts_lower = [x.lower() for x in parts]
+
+    return '-'.join(parts_lower)
+
+
 def render_to_string(backend, filename, context):
     # type: (str, str, Dict) -> str
     """
@@ -132,6 +140,7 @@ def render_to_string(backend, filename, context):
     )
     environment.filters["clean_schema"] = clean_schema
     environment.filters["parse_array"] = parse_array
+    environment.filters["capitalize_splitter"] = capitalize_splitter
 
     return environment.get_template(filename).render(context)
 

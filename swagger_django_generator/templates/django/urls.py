@@ -12,7 +12,7 @@ import os
 urlpatterns = [
     {# URLs are traverse in reversed sorted order so that longer ones are evaluated first #}
     {% for relative_url, class_name in entries|dictsort(true)|reverse %}
-    url(r"^{{ relative_url }}$", views.{{ class_name }}.as_view()),
+    url(r"^{{ relative_url }}$", views.{{ class_name }}.as_view(), name="{{ class_name|capitalize_splitter }}"),
     {% endfor %}
 ]
 
