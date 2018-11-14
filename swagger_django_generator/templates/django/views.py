@@ -214,7 +214,7 @@ class {{ class_name }}(View):
         except ObjectDoesNotExist as ve:
             return HttpResponseNotFound("Object not found: {}".format(ve))
         except PermissionDenied as ve:
-            HttpResponseForbidden(ve)
+            return HttpResponseForbidden(ve)
         except ValueError as ve:
             return HttpResponseBadRequest("Parameter validation failed: {}".format(ve))
     {% if not loop.last %}
