@@ -10,11 +10,11 @@ import os
 from jsonschema import ValidationError
 from django.conf import settings
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound, \
-    FileResponse
+    FileResponse, HttpResponseForbidden
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views import View
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
 
 import {{ module }}.schemas as schemas
 import {{ module }}.utils as utils
@@ -213,6 +213,8 @@ class {{ class_name }}(View):
             return HttpResponseBadRequest("Parameter validation failed: {}".format(ve.message))
         except ObjectDoesNotExist as ve:
             return HttpResponseNotFound("Object not found: {}".format(ve))
+        except PermissionDenied as ve:
+            HttpResponseForbidden(ve)
         except ValueError as ve:
             return HttpResponseBadRequest("Parameter validation failed: {}".format(ve))
     {% if not loop.last %}
