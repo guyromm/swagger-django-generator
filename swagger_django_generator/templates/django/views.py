@@ -201,7 +201,7 @@ class {{ class_name }}(View):
                 response_method = JsonResponse
             response = response_method(result, safe=False)
 
-            if not isinstance(response, FileResponse):
+            if not isinstance(response.content, bytes):
                 maybe_validate_result(response.content, self.{{ verb|upper }}_RESPONSE_SCHEMA)
 
             for key, val in headers.items():
