@@ -10,7 +10,7 @@ import os
 from jsonschema import ValidationError
 from django.conf import settings
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound, \
-    FileResponse, HttpResponseForbidden
+    HttpResponseForbidden
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views import View
