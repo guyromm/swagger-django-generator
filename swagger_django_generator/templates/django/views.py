@@ -201,10 +201,8 @@ class {{ class_name }}(View):
                 response_method = JsonResponse
             response = response_method(result, safe=False)
 
-            try:
+            if not isinstance(response.content, bytes):
                 maybe_validate_result(response.content, self.{{ verb|upper }}_RESPONSE_SCHEMA)
-            except UnicodeDecodeError:
-                pass
 
             for key, val in headers.items():
                 response[key] = val
