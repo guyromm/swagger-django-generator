@@ -10,7 +10,7 @@ import os
 from jsonschema import ValidationError
 from django.conf import settings
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound, \
-    FileResponse, HttpResponseForbidden
+    HttpResponseForbidden
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views import View
@@ -201,7 +201,8 @@ class {{ class_name }}(View):
                 response_method = JsonResponse
             response = response_method(result, safe=False)
 
-            if not isinstance(response.content, bytes):
+            response_content = getattr(response, 'content', None)
+            if response_content and not isinstance(response_content, bytes):
                 maybe_validate_result(response.content, self.{{ verb|upper }}_RESPONSE_SCHEMA)
 
             for key, val in headers.items():
@@ -216,7 +217,7 @@ class {{ class_name }}(View):
         except PermissionDenied as ve:
             return HttpResponseForbidden(ve)
         except ValueError as ve:
-            return HttpResponseBadRequest("Parameter validation failed: {}".format(ve))
+            return HttpResponseBadRequest("Value error: {}".format(ve))
     {% if not loop.last %}
 
     {% endif %}
