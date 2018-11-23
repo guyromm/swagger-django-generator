@@ -187,8 +187,8 @@ class {{ class_name }}(View):
             else:
                 method = Stubs.{{ info.operation }}
             result = method(request, {% if info.body %}body, {% endif %}{% if info.form_data %}form_data, {% endif %}
-                {% for ra in info.required_args %}{{ ra.name }}, {% endfor %}
-                {% for oa in info.optional_args if oa.in == "query" %}{{ oa.name }}, {% endfor %})
+                {% for ra in info.required_args %}{{ ra.name }}={{ ra.name }}, {% endfor %}
+                {% for oa in info.optional_args if oa.in == "query" %}{{ oa.name }}={{ oa.name }}, {% endfor %})
 
             if type(result) is tuple:
                 result, headers = result
