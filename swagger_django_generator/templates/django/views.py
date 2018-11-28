@@ -10,7 +10,7 @@ import os
 from jsonschema import ValidationError
 from django.conf import settings
 from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest, HttpResponseNotFound, \
-    HttpResponseForbidden
+    HttpResponseForbidden, Http404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views import View
@@ -212,7 +212,7 @@ class {{ class_name }}(View):
 
         except ValidationError as ve:
             return HttpResponseBadRequest("Parameter validation failed: {}".format(ve.message))
-        except ObjectDoesNotExist as ve:
+        except (ObjectDoesNotExist, Http404) as ve:
             return HttpResponseNotFound("Object not found: {}".format(ve))
         except PermissionDenied as ve:
             return HttpResponseForbidden(ve)
